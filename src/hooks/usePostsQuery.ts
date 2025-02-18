@@ -1,4 +1,3 @@
-// src/hooks/usePostsQuery.ts
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Post } from '../types';

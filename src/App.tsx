@@ -1,4 +1,3 @@
-// src/App.tsx
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Container, Typography, Box } from '@mui/material';
