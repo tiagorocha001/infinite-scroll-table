@@ -8,10 +8,11 @@ import {
   TableRow,
   Paper,
   CircularProgress,
-  Box,
   Alert,
+  Pagination,
+  Stack,
+  Typography
 } from '@mui/material';
-import { useInView } from 'react-intersection-observer';
 import { Post } from '../types';
 import { TABLE_COLUMNS } from '../constants/tableColumns';
 
@@ -19,25 +20,21 @@ interface PostsTableProps {
   data: Post[];
   isLoading: boolean;
   isError: boolean;
-  hasNextPage: boolean;
-  fetchNextPage: () => void;
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
 }
 
 export const PostsTable: React.FC<PostsTableProps> = ({
   data,
   isLoading,
   isError,
-  hasNextPage,
-  fetchNextPage,
+  page,
+  totalPages,
+  totalCount,
+  onPageChange,
 }) => {
-  const { ref, inView } = useInView();
-
-  React.useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, fetchNextPage]);
-
   if (isError) {
     return (
       <Alert severity="error">
@@ -48,7 +45,7 @@ export const PostsTable: React.FC<PostsTableProps> = ({
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: 440 }}>
+      <TableContainer sx={{ maxHeight: '70vh' }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
@@ -63,24 +60,45 @@ export const PostsTable: React.FC<PostsTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((post) => (
-              <TableRow hover key={post.id}>
-                {TABLE_COLUMNS.map((column) => (
-                  <TableCell key={column.id}>
-                    {post[column.id]}
-                  </TableCell>
-                ))}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={TABLE_COLUMNS.length} align="center">
+                  <CircularProgress />
+                </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              data.map((post) => (
+                <TableRow hover key={post.id}>
+                  {TABLE_COLUMNS.map((column) => (
+                    <TableCell key={column.id}>
+                      {post[column.id]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-      {isLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-          <CircularProgress />
-        </Box>
-      )}
-      <div ref={ref} style={{ height: 20 }} />
+      
+      <Stack
+        spacing={2}
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Total items: {totalCount}
+        </Typography>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={(_, value) => onPageChange(value)}
+          color="primary"
+          disabled={isLoading}
+        />
+      </Stack>
     </Paper>
   );
-};
+}

@@ -1,35 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Container, Typography, Box } from '@mui/material';
+import { SearchBar } from './components/SearchBar';
+import { PostsTable } from './components/PostsTable';
+import { usePostsQuery } from './hooks/usePostsQuery';
 
-function App() {
-  const [count, setCount] = useState(0)
+const queryClient = new QueryClient();
+
+const PostsPage: React.FC = () => {
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [page, setPage] = React.useState(1);
+  
+  // Reset page when search term changes
+  React.useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  const { 
+    data,
+    isLoading,
+    isError,
+  } = usePostsQuery(searchTerm, page);
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Container maxWidth="lg">
+      <Box sx={{ my: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Posts Table
+        </Typography>
+        <SearchBar onSearch={handleSearch} />
+        <PostsTable
+          data={data?.data ?? []}
+          isLoading={isLoading}
+          isError={isError}
+          page={page}
+          totalPages={data?.totalPages ?? 0}
+          totalCount={data?.totalCount ?? 0}
+          onPageChange={handlePageChange}
+        />
+      </Box>
+    </Container>
+  );
+};
 
-export default App
+const App: React.FC = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PostsPage />
+    </QueryClientProvider>
+  );
+};
+
+export default App;
