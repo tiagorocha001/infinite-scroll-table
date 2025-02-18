@@ -8,10 +8,12 @@ import {
   TableRow,
   Paper,
   CircularProgress,
+  Box,
   Alert,
   Pagination,
   Stack,
-  Typography
+  Typography,
+  alpha,
 } from '@mui/material';
 import { Post } from '../types';
 import { TABLE_COLUMNS } from '../constants/tableColumns';
@@ -35,6 +37,16 @@ export const PostsTable: React.FC<PostsTableProps> = ({
   totalCount,
   onPageChange,
 }) => {
+  // Keep track of the last valid data
+  const [displayData, setDisplayData] = React.useState<Post[]>(data);
+
+  // Update displayData only when new data arrives and is not empty
+  React.useEffect(() => {
+    if (data && data.length > 0) {
+      setDisplayData(data);
+    }
+  }, [data]);
+
   if (isError) {
     return (
       <Alert severity="error">
@@ -44,7 +56,25 @@ export const PostsTable: React.FC<PostsTableProps> = ({
   }
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+    <Paper sx={{ width: '100%', overflow: 'hidden', position: 'relative' }}>
+      {isLoading && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.7),
+            zIndex: 1,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
       <TableContainer sx={{ maxHeight: '70vh' }}>
         <Table stickyHeader>
           <TableHead>
@@ -60,22 +90,21 @@ export const PostsTable: React.FC<PostsTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {isLoading ? (
+            {displayData.map((post) => (
+              <TableRow hover key={post.id}>
+                {TABLE_COLUMNS.map((column) => (
+                  <TableCell key={column.id}>
+                    {post[column.id]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+            {displayData.length === 0 && !isLoading && (
               <TableRow>
                 <TableCell colSpan={TABLE_COLUMNS.length} align="center">
-                  <CircularProgress />
+                  No data available
                 </TableCell>
               </TableRow>
-            ) : (
-              data.map((post) => (
-                <TableRow hover key={post.id}>
-                  {TABLE_COLUMNS.map((column) => (
-                    <TableCell key={column.id}>
-                      {post[column.id]}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
             )}
           </TableBody>
         </Table>
@@ -86,7 +115,13 @@ export const PostsTable: React.FC<PostsTableProps> = ({
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}
+        sx={{ 
+          p: 2, 
+          borderTop: 1, 
+          borderColor: 'divider',
+          position: 'relative',
+          zIndex: 2
+        }}
       >
         <Typography variant="body2" color="text.secondary">
           Total items: {totalCount}
@@ -101,4 +136,4 @@ export const PostsTable: React.FC<PostsTableProps> = ({
       </Stack>
     </Paper>
   );
-}
+};
