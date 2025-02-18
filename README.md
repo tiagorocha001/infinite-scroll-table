@@ -1,7 +1,9 @@
 # Setup
 
 Run: 
+
 npm i 
+
 npm run dev
 
 # React + TypeScript + Vite
